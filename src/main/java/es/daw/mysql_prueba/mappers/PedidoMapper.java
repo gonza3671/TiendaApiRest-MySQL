@@ -2,6 +2,7 @@ package es.daw.mysql_prueba.mappers;
 
 import es.daw.mysql_prueba.entitys.Pedido;
 import es.daw.mysql_prueba.enums.StatusPedido;
+import es.daw.mysql_prueba.exception.ClienteNotFoundException;
 import es.daw.mysql_prueba.models.clienteDTOs.ClienteDTO;
 import es.daw.mysql_prueba.models.PedidoDTOs.PedidoDTO;
 import es.daw.mysql_prueba.models.PedidoDTOs.PedidoRequestDTO;
@@ -53,8 +54,8 @@ public class PedidoMapper {
     public Pedido toEntity(PedidoRequestDTO dto) {
         Pedido entity = new Pedido();
         entity.setCliente(clienteRepository.findById(dto.getIdCliente())
-        .orElseThrow(() -> new RuntimeException("Cliente no encontrado"))
-        ); // excepcion personalizada pendiente
+        .orElseThrow(() -> new ClienteNotFoundException(dto.getIdCliente())));
+
         entity.setEstado(StatusPedido.PENDIENTE);
 
         return entity;

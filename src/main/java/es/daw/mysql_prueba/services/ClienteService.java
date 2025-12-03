@@ -1,5 +1,6 @@
 package es.daw.mysql_prueba.services;
 
+import es.daw.mysql_prueba.exception.ClienteNotFoundException;
 import es.daw.mysql_prueba.mappers.ClienteMapper;
 import es.daw.mysql_prueba.models.clienteDTOs.ClienteDTO;
 import es.daw.mysql_prueba.models.clienteDTOs.ClientePedidoResponseDTO;
@@ -31,6 +32,6 @@ public class ClienteService {
 
     public void getClienteById(Long idCliente) {
         clienteRepository.findById(idCliente)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new ClienteNotFoundException(idCliente));
     }
 }

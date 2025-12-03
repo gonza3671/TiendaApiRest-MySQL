@@ -1,6 +1,7 @@
 package es.daw.mysql_prueba.services;
 
 import es.daw.mysql_prueba.entitys.Producto;
+import es.daw.mysql_prueba.exception.ProductoNotFoundException;
 import es.daw.mysql_prueba.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,6 @@ public class ProductoService {
 
     public Producto findById(Long idProducto) {
         return productoRepository.findById(idProducto)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + idProducto)); // Excepción personalizada pendiente
+                .orElseThrow(() -> new ProductoNotFoundException(idProducto)); // Excepción personalizada pendiente
     }
 }

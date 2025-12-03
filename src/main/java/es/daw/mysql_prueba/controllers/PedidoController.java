@@ -18,4 +18,11 @@ public class PedidoController {
     public ResponseEntity<PedidoResponseDTO> createPedido(@RequestBody PedidoRequestDTO pedido) {
         return ResponseEntity.ok(pedidoService.createPedido(pedido));
     }
+
+    @PutMapping("/edit/status")
+    public ResponseEntity<PedidoResponseDTO> editarStatus(
+            @RequestBody Long idPedido,
+            @RequestParam String nuevoStatus) {
+        return ResponseEntity.ok(pedidoService.editarStatus(idPedido, nuevoStatus));
+    }
 }
