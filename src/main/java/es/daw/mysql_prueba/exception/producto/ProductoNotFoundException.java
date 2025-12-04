@@ -1,4 +1,4 @@
-package es.daw.mysql_prueba.exception;
+package es.daw.mysql_prueba.exception.producto;
 
 public class ProductoNotFoundException extends RuntimeException {
     public ProductoNotFoundException(Long id) {

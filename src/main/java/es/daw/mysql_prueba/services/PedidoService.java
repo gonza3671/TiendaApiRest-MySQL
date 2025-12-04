@@ -2,14 +2,21 @@ package es.daw.mysql_prueba.services;
 
 import es.daw.mysql_prueba.entitys.Pedido;
 import es.daw.mysql_prueba.entitys.pedido_producto.DetallePedido;
+import es.daw.mysql_prueba.enums.DireccionTipo;
 import es.daw.mysql_prueba.enums.StatusPedido;
-import es.daw.mysql_prueba.exception.PedidoNotFoundException;
-import es.daw.mysql_prueba.exception.StatusUnchangedException;
-import es.daw.mysql_prueba.mappers.DetallePedidoMapper;
+import es.daw.mysql_prueba.exception.cliente.ClienteHasNoDireccionException;
+import es.daw.mysql_prueba.exception.cliente.ClienteNotFoundException;
+import es.daw.mysql_prueba.exception.direccion.IllegalDireccionTipoException;
+import es.daw.mysql_prueba.exception.producto.InsufficientStockException;
+import es.daw.mysql_prueba.exception.pedido.PedidoNotFoundException;
+import es.daw.mysql_prueba.exception.pedido.StatusNotExistsException;
+import es.daw.mysql_prueba.exception.pedido.StatusUnchangedException;
 import es.daw.mysql_prueba.mappers.PedidoMapper;
 import es.daw.mysql_prueba.models.PedidoDTOs.PedidoDTO;
 import es.daw.mysql_prueba.models.PedidoDTOs.PedidoRequestDTO;
+import es.daw.mysql_prueba.models.PedidoDTOs.PedidoRequestStatusDTO;
 import es.daw.mysql_prueba.models.PedidoDTOs.PedidoResponseDTO;
+import es.daw.mysql_prueba.repository.ClienteRepository;
 import es.daw.mysql_prueba.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,51 +29,90 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PedidoService {
 
+    // -----------------INYECCIONES POR CONSTRUCTOR-----------------
     private final PedidoRepository pedidoRepository;
     private final PedidoMapper pedidoMapper;
-    private final ClienteService clienteService;
-    private final ProductoService productoService;
-    private final DetallePedidoMapper detallePedidoMapper;
 
+    private final ProductoService productoService;
+    private final DetallePedidoService detallePedidoService;
+
+    private final ClienteRepository clienteRepository;
+
+    // ---------------METODOS LLAMADOS POR ENDPOINTS-----------------
     @Transactional
     public PedidoResponseDTO createPedido(PedidoRequestDTO pedido) {
-        clienteService.getClienteById(pedido.getIdCliente());
+        // comprobaciones de existencia
+        if (clienteRepository.findById(pedido.getIdCliente())
+                .orElseThrow(() -> new ClienteNotFoundException(pedido.getIdCliente())).getDirecciones().isEmpty()) {
+            throw new ClienteHasNoDireccionException(pedido.getIdCliente());
+        }
+        pedido.getProductos().forEach(p -> productoService.findById(p.getIdProducto()));
 
-        pedido.getProductos()
-                .forEach(p ->
-                    productoService.findById(p.getIdProducto())
-                ); // Verifica que todos los productos existen
-
+        // mapeo de DTO a entidad
         Pedido pedidoNuevo = pedidoMapper.toEntity(pedido);
 
+        // comprobaciones de dirección
+        if (!pedidoNuevo.getCliente().getId().equals(pedidoNuevo.getDireccion().getCliente().getId())) {
+            throw new IllegalDireccionTipoException("La dirección no pertenece al cliente del pedido");
+        }
+        if (pedidoNuevo.getDireccion().getDireccionTipo().equals(DireccionTipo.FACTURACION)) { // solo se permiten envíos a direcciones de envío o principal
+            throw new IllegalDireccionTipoException(DireccionTipo.FACTURACION.name());
+        }
+
+        // inicializar detalles y comprobar stock
         pedidoNuevo.setDetallePedidos(new HashSet<>());
-
-        List<DetallePedido> detalles = detallePedidoMapper.toEntitys(pedido.getProductos());
-
-
+        List<DetallePedido> detalles = detallePedidoService.toEntitys(pedido.getProductos());
         detalles.forEach(d -> {
                     d.setPedido(pedidoNuevo);
                     pedidoNuevo.getDetallePedidos().add(d);
+                    if (d.getProducto().getStock() < d.getCantidad()) {
+                        throw new InsufficientStockException(d.getProducto().getId());
+                    }
                 });
 
+        // guardar pedido
         Pedido pedidoSaved = pedidoRepository.save(pedidoNuevo);
 
+        // actualizar stock productos
+        detalles.forEach(d -> {
+            d.getProducto().setStock(d.getProducto().getStock() - d.getCantidad());
+            productoService.saveProducto(d.getProducto());
+        });
 
         return pedidoMapper.toDtoResponse(pedidoSaved);
     }
 
-    public PedidoResponseDTO editarStatus(Long idPedido, String nuevoStatus) {
-        Pedido pedido = pedidoRepository.findById(idPedido)
-                .orElseThrow( () -> new PedidoNotFoundException(idPedido));
+    public PedidoResponseDTO editarStatus(PedidoRequestStatusDTO request) {
+        // mapear DTO a entidad
+        Pedido pedido = this.findById(request.getIdPedido());
 
-        if (nuevoStatus.equalsIgnoreCase(pedido.getEstado().name())) {
-            throw new StatusUnchangedException(nuevoStatus);
+        // comprobaciones de status
+        if (request.getStatus().equalsIgnoreCase(pedido.getEstado().name())) {
+            throw new StatusUnchangedException(request.getStatus());
+        }
+        if (!StatusPedido.exists(request.getStatus())) {
+            throw new StatusNotExistsException(request.getStatus());
         }
 
-        pedido.setEstado(StatusPedido.valueOf(nuevoStatus.toUpperCase()));
-
+        // actualizar y guardar
+        pedido.setEstado(StatusPedido.valueOf(request.getStatus().toUpperCase()));
         Pedido pedidoUpdated = pedidoRepository.save(pedido);
 
         return pedidoMapper.toDtoResponse(pedidoUpdated);
+    }
+
+
+    // ---------------------METODOS AUXILIARES----------------------
+    public Pedido findById(Long id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow( () -> new PedidoNotFoundException(id) );
+    }
+
+    public List<Pedido> findByClienteId(Long idCliente) {
+        return pedidoRepository.findByClienteId(idCliente);
+    }
+
+    public List<PedidoDTO> toDtos(List<Pedido> dtos) {
+        return pedidoMapper.toDtos(dtos);
     }
 }

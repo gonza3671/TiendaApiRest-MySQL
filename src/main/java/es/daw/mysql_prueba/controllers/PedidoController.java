@@ -1,6 +1,7 @@
 package es.daw.mysql_prueba.controllers;
 
 import es.daw.mysql_prueba.models.PedidoDTOs.PedidoRequestDTO;
+import es.daw.mysql_prueba.models.PedidoDTOs.PedidoRequestStatusDTO;
 import es.daw.mysql_prueba.models.PedidoDTOs.PedidoResponseDTO;
 import es.daw.mysql_prueba.services.PedidoService;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,7 @@ public class PedidoController {
 
     @PutMapping("/edit/status")
     public ResponseEntity<PedidoResponseDTO> editarStatus(
-            @RequestBody Long idPedido,
-            @RequestParam String nuevoStatus) {
-        return ResponseEntity.ok(pedidoService.editarStatus(idPedido, nuevoStatus));
+            @RequestBody PedidoRequestStatusDTO request) {
+        return ResponseEntity.ok(pedidoService.editarStatus(request));
     }
 }

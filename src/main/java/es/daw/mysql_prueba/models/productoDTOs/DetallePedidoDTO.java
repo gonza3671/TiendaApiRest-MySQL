@@ -1,4 +1,4 @@
-package es.daw.mysql_prueba.models;
+package es.daw.mysql_prueba.models.productoDTOs;
 
 import lombok.Builder;
 import lombok.Data;

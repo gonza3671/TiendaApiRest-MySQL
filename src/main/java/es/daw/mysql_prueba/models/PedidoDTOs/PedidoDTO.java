@@ -1,7 +1,7 @@
 package es.daw.mysql_prueba.models.PedidoDTOs;
 
 import es.daw.mysql_prueba.enums.StatusPedido;
-import es.daw.mysql_prueba.models.DetallePedidoDTO;
+import es.daw.mysql_prueba.models.productoDTOs.DetallePedidoDTO;
 import lombok.Builder;
 import lombok.Data;
 

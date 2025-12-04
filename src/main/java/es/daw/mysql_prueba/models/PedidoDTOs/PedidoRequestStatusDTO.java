@@ -5,5 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ProductoDTO {
+public class PedidoRequestStatusDTO {
+    private Long idPedido;
+    private String status;
 }

@@ -1,4 +1,4 @@
-package es.daw.mysql_prueba.exception;
+package es.daw.mysql_prueba.exception.cliente;
 
 public class ClienteNotFoundException extends RuntimeException {
     public ClienteNotFoundException(Long id) {

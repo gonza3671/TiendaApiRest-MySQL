@@ -2,8 +2,8 @@ package es.daw.mysql_prueba.mappers;
 
 import es.daw.mysql_prueba.entitys.pedido_producto.DetallePedido;
 import es.daw.mysql_prueba.entitys.pedido_producto.DetallePedidoId;
-import es.daw.mysql_prueba.models.DetallePedidoDTO;
-import es.daw.mysql_prueba.models.ProductoYCantidadRequestDTO;
+import es.daw.mysql_prueba.models.productoDTOs.DetallePedidoDTO;
+import es.daw.mysql_prueba.models.productoDTOs.ProductoYCantidadRequestDTO;
 import es.daw.mysql_prueba.services.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,8 +14,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DetallePedidoMapper {
 
+    // -------------- SERVICIOS --------------
     private final ProductoService productoService;
 
+    // ------------ DTO MAPPERS --------------
     public DetallePedidoDTO toDto(DetallePedido pedido) {
         return DetallePedidoDTO
                 .builder()
@@ -32,6 +34,7 @@ public class DetallePedidoMapper {
                 .toList();
     }
 
+    // ------------ ENTITY MAPPERS --------------
     public DetallePedido toEntity(ProductoYCantidadRequestDTO dto) {
         DetallePedido entity = new DetallePedido();
 

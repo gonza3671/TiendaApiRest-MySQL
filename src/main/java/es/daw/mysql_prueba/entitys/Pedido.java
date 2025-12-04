@@ -20,7 +20,6 @@ public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "pedido_id")
     private Long id;
 
     @CreationTimestamp
@@ -34,7 +33,10 @@ public class Pedido {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
-    // mappedby apunta al campo "pedido" en DetallePedido
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DetallePedido> detallePedidos = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "direccion_id", nullable = false)
+    private Direccion direccion;
 }

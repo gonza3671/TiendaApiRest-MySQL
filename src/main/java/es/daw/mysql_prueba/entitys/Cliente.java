@@ -15,7 +15,6 @@ public class Cliente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cliente_id")
     private Long id;
 
     @Column(length = 100)
@@ -29,4 +28,7 @@ public class Cliente {
 
     @OneToMany(mappedBy = "cliente")
     private Set<Pedido> pedidos;
+
+    @OneToMany(mappedBy = "cliente")
+    private Set<Direccion> direcciones;
 }

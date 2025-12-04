@@ -24,4 +24,4 @@ public class StatusPedidoConverter implements AttributeConverter<StatusPedido, S
     }
 }
 
-// cosa rara lo ha hecho la IA
+// cosa rara, lo ha hecho la IA
