@@ -5,54 +5,43 @@ import es.daw.mysql_prueba.entitys.pedido_producto.DetallePedidoId;
 import es.daw.mysql_prueba.models.productoDTOs.DetallePedidoDTO;
 import es.daw.mysql_prueba.models.productoDTOs.ProductoYCantidadRequestDTO;
 import es.daw.mysql_prueba.services.ProductoService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@Component
-@RequiredArgsConstructor
-public class DetallePedidoMapper {
+@Mapper(componentModel = "spring")
+public abstract class DetallePedidoMapper {
 
-    // -------------- SERVICIOS --------------
-    private final ProductoService productoService;
+    protected ProductoService productoService;
 
-    // ------------ DTO MAPPERS --------------
-    public DetallePedidoDTO toDto(DetallePedido pedido) {
-        return DetallePedidoDTO
-                .builder()
-                .nombre(pedido.getProducto().getNombre())
-                .cantidad(pedido.getCantidad())
-                .precio(pedido.getProducto().getPrecio())
-                .build();
+    @Autowired
+    public void setProductoService(ProductoService productoService) {
+        this.productoService = productoService;
     }
 
-    public List<DetallePedidoDTO> toDtos(List<DetallePedido> pedido) {
-        return pedido
-                .stream()
-                .map(this::toDto)
-                .toList();
-    }
+    @Mappings({
+            @Mapping(source = "producto.nombre", target = "nombre"),
+            @Mapping(source = "producto.precio", target = "precio"),
+    })
+    public abstract DetallePedidoDTO toDto(DetallePedido detallePedido);
 
-    // ------------ ENTITY MAPPERS --------------
-    public DetallePedido toEntity(ProductoYCantidadRequestDTO dto) {
-        DetallePedido entity = new DetallePedido();
+    public abstract List<DetallePedidoDTO> toDtos(List<DetallePedido> detalles);
 
+    @Mappings({
+            @Mapping(target = "producto", expression = "java(productoService.findById(dto.getIdProducto()))"),
+            @Mapping(target = "precioUnidad", expression = "java(productoService.findById(dto.getIdProducto()).getPrecio())"),
+            @Mapping(target = "id", source = "dto")
+    })
+    public abstract DetallePedido toEntity(ProductoYCantidadRequestDTO dto);
+
+    protected DetallePedidoId map(ProductoYCantidadRequestDTO dto) {
         DetallePedidoId id = new DetallePedidoId();
         id.setProductoId(dto.getIdProducto());
-
-        entity.setId(id);
-        entity.setCantidad(dto.getCantidad());
-        entity.setProducto(productoService.findById(dto.getIdProducto()));
-        entity.setPrecioUnidad(productoService.findById(dto.getIdProducto()).getPrecio());
-
-        return entity;
+        return id;
     }
 
-    public List<DetallePedido> toEntitys(List<ProductoYCantidadRequestDTO> dtos) {
-        return dtos
-                .stream()
-                .map(this::toEntity)
-                .toList();
-    }
+    public abstract List<DetallePedido> toEntitys(List<ProductoYCantidadRequestDTO> dtos);
 }

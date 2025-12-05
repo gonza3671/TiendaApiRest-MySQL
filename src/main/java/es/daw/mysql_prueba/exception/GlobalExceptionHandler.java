@@ -1,6 +1,7 @@
 package es.daw.mysql_prueba.exception;
 
 import es.daw.mysql_prueba.exception.cliente.ClienteHasNoDireccionException;
+import es.daw.mysql_prueba.exception.cliente.ClienteHasNoPedidosException;
 import es.daw.mysql_prueba.exception.cliente.ClienteNotFoundException;
 import es.daw.mysql_prueba.exception.direccion.AddressMissMatchException;
 import es.daw.mysql_prueba.exception.direccion.DireccionNotFoundException;
@@ -31,7 +32,8 @@ public class GlobalExceptionHandler {
             AddressMissMatchException.class,
             IllegalDireccionTipoException.class,
             DireccionNotFoundException.class,
-            ClienteHasNoDireccionException.class
+            ClienteHasNoDireccionException.class,
+            ClienteHasNoPedidosException.class
     })
     public ResponseEntity<ErrorDTO> handleAppExceptions(RuntimeException ex) {
         ErrorDTO error = ErrorDTO.builder()

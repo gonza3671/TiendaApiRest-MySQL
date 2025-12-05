@@ -3,7 +3,8 @@ package es.daw.mysql_prueba.enums;
 public enum StatusPedido {
     PENDIENTE,
     ENVIADO,
-    ENTREGADO;
+    ENTREGADO,
+    CANCELADO;
 
     public static boolean exists(String status) {
         if (status == null) return false;

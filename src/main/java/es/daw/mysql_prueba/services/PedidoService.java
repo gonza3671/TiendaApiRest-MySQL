@@ -6,16 +6,16 @@ import es.daw.mysql_prueba.enums.DireccionTipo;
 import es.daw.mysql_prueba.enums.StatusPedido;
 import es.daw.mysql_prueba.exception.cliente.ClienteHasNoDireccionException;
 import es.daw.mysql_prueba.exception.cliente.ClienteNotFoundException;
+import es.daw.mysql_prueba.exception.direccion.AddressMissMatchException;
 import es.daw.mysql_prueba.exception.direccion.IllegalDireccionTipoException;
 import es.daw.mysql_prueba.exception.producto.InsufficientStockException;
 import es.daw.mysql_prueba.exception.pedido.PedidoNotFoundException;
 import es.daw.mysql_prueba.exception.pedido.StatusNotExistsException;
 import es.daw.mysql_prueba.exception.pedido.StatusUnchangedException;
 import es.daw.mysql_prueba.mappers.PedidoMapper;
-import es.daw.mysql_prueba.models.PedidoDTOs.PedidoDTO;
-import es.daw.mysql_prueba.models.PedidoDTOs.PedidoRequestDTO;
-import es.daw.mysql_prueba.models.PedidoDTOs.PedidoRequestStatusDTO;
-import es.daw.mysql_prueba.models.PedidoDTOs.PedidoResponseDTO;
+import es.daw.mysql_prueba.models.pedidoDTOs.PedidoRequestDTO;
+import es.daw.mysql_prueba.models.pedidoDTOs.PedidoRequestStatusDTO;
+import es.daw.mysql_prueba.models.pedidoDTOs.PedidoResponseDTO;
 import es.daw.mysql_prueba.repository.ClienteRepository;
 import es.daw.mysql_prueba.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,6 @@ public class PedidoService {
 
     private final ProductoService productoService;
     private final DetallePedidoService detallePedidoService;
-
     private final ClienteRepository clienteRepository;
 
     // ---------------METODOS LLAMADOS POR ENDPOINTS-----------------
@@ -53,9 +52,9 @@ public class PedidoService {
 
         // comprobaciones de dirección
         if (!pedidoNuevo.getCliente().getId().equals(pedidoNuevo.getDireccion().getCliente().getId())) {
-            throw new IllegalDireccionTipoException("La dirección no pertenece al cliente del pedido");
+            throw new AddressMissMatchException(pedidoNuevo.getCliente().getId(), pedidoNuevo.getDireccion().getId());
         }
-        if (pedidoNuevo.getDireccion().getDireccionTipo().equals(DireccionTipo.FACTURACION)) { // solo se permiten envíos a direcciones de envío o principal
+        if (pedidoNuevo.getDireccion().getDireccionTipo().equals(DireccionTipo.FACTURACION)) {
             throw new IllegalDireccionTipoException(DireccionTipo.FACTURACION.name());
         }
 
@@ -93,6 +92,10 @@ public class PedidoService {
         if (!StatusPedido.exists(request.getStatus())) {
             throw new StatusNotExistsException(request.getStatus());
         }
+        if (pedido.getEstado().equals(StatusPedido.CANCELADO) ||
+                pedido.getEstado().equals(StatusPedido.ENTREGADO)) {
+            throw new RuntimeException(request.getStatus()); // añadir excepcion personalizada
+        }
 
         // actualizar y guardar
         pedido.setEstado(StatusPedido.valueOf(request.getStatus().toUpperCase()));
@@ -100,7 +103,6 @@ public class PedidoService {
 
         return pedidoMapper.toDtoResponse(pedidoUpdated);
     }
-
 
     // ---------------------METODOS AUXILIARES----------------------
     public Pedido findById(Long id) {
@@ -110,9 +112,5 @@ public class PedidoService {
 
     public List<Pedido> findByClienteId(Long idCliente) {
         return pedidoRepository.findByClienteId(idCliente);
-    }
-
-    public List<PedidoDTO> toDtos(List<Pedido> dtos) {
-        return pedidoMapper.toDtos(dtos);
     }
 }

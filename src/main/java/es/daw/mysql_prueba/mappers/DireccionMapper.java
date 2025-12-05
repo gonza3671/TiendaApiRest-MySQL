@@ -1,20 +1,19 @@
 package es.daw.mysql_prueba.mappers;
 
+import es.daw.mysql_prueba.entitys.Cliente;
 import es.daw.mysql_prueba.entitys.Direccion;
-import es.daw.mysql_prueba.models.DireccionResponsePedidoDTO;
-import org.springframework.stereotype.Component;
+import es.daw.mysql_prueba.models.direccionDTOs.DireccionDTO;
+import es.daw.mysql_prueba.models.direccionDTOs.DireccionResponsePedidoDTO;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Context;
 
-@Component
-public class DireccionMapper {
+@Mapper(componentModel = "spring")
+public interface DireccionMapper {
 
-    // ------------ DTO MAPPERS --------------
-    public DireccionResponsePedidoDTO toDto(Direccion entity) {
-        return DireccionResponsePedidoDTO
-                .builder()
-                .calle(entity.getCalle())
-                .ciudad(entity.getCiudad())
-                .codigoPostal(entity.getCodigoPostal())
-                .pais(entity.getPais())
-                .build();
-    }
+    DireccionResponsePedidoDTO toDto(Direccion entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "cliente", source = "cliente")
+    Direccion toEntity(DireccionDTO dto, Cliente cliente);
 }
